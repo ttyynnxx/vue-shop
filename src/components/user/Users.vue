@@ -62,6 +62,7 @@
               type="danger"
               icon="el-icon-delete"
               size="mini"
+              @click="removeUserById(scope.row.id)"
             ></el-button>
             <el-tooltip
               effect="dark"
@@ -257,7 +258,7 @@ export default {
       }
       this.userlist = res.data.users
       this.total = res.data.total
-      console.log(res)
+      // console.log(res)
     },
     // 监听 pagesize 改变的事件
     handleSizeChange(newSize) {
@@ -289,7 +290,7 @@ export default {
     },
     // 点击按钮，添加新用户
     addUser() {
-      this.$refs.addFormRef.validate(async (valid) => {
+      this.$refs.addFormRef.validate(async valid => {
         if (!valid) return
         // 发起添加用户的网络请求
         const { data: res } = await this.$http.post('users', this.addForm)
@@ -319,7 +320,7 @@ export default {
     },
     // 点击按钮，编辑用户
     editUser(id) {
-      this.$refs.editFormRef.validate(async (valid) => {
+      this.$refs.editFormRef.validate(async valid => {
         if (!valid) return
         // 发起编辑用户的网络请求
         const { data: res } = await this.$http.put(
@@ -330,7 +331,7 @@ export default {
           }
         )
         if (res.meta.status !== 200) {
-          this.$message.error('更新用户失败！')
+          return this.$message.error('更新用户失败！')
         }
 
         // 隐藏添加用户的对话框
@@ -340,6 +341,32 @@ export default {
 
         this.$message.success('更新成功！')
       })
+    },
+
+    // 根据ID删除对应的用户信息
+    async removeUserById(id) {
+      const confirmResult = await this.$confirm(
+        '此操作将永久删除该用户, 是否继续?',
+        '提示',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      ).catch(err => err)
+      // 确认删除，返回字符串 confirm ，点击取消，返回cancel
+      // console.log(confirmResult)
+      if (confirmResult !== 'confirm') {
+        return this.$message.info('已取消删除')
+      }
+      // 发起删除用户的网络请求
+      const { data: res } = await this.$http.delete('users/' + id)
+      if (res.meta.status !== 200) {
+        return this.$message.error('删除用户失败！')
+      }
+      this.$message.success('删除用户成功！')
+      // 重新获取用户数据
+      this.getUserList()
     }
   }
 }
