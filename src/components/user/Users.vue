@@ -358,15 +358,16 @@ export default {
       // console.log(confirmResult)
       if (confirmResult !== 'confirm') {
         return this.$message.info('已取消删除')
+      } else {
+        // 发起删除用户的网络请求
+        const { data: res } = await this.$http.delete('users/' + id)
+        if (res.meta.status !== 200) {
+          return this.$message.error('删除用户失败！')
+        }
+        this.$message.success('删除用户成功！')
+        // 重新获取用户数据
+        this.getUserList()
       }
-      // 发起删除用户的网络请求
-      const { data: res } = await this.$http.delete('users/' + id)
-      if (res.meta.status !== 200) {
-        return this.$message.error('删除用户失败！')
-      }
-      this.$message.success('删除用户成功！')
-      // 重新获取用户数据
-      this.getUserList()
     }
   }
 }
