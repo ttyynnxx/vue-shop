@@ -31,9 +31,9 @@
         </template>
 
         <!-- 操作 -->
-        <template slot="opt">
-          <el-button type="primary" size="mini" icon="el-icon-edit">编辑</el-button>
-          <el-button type="danger" size="mini" icon="el-icon-delete">删除</el-button>
+        <template slot="opt" slot-scope="scope">
+          <el-button type="primary" size="mini" icon="el-icon-edit" @click="showEditDialog(scope.row.car_id)">编辑</el-button>
+          <el-button type="danger" size="mini" icon="el-icon-delete" @click="removeCateById(scope.row.cat_id)">删除</el-button>
         </template>
       </tree-table>
 
@@ -69,6 +69,25 @@
       <span slot="footer" class="dialog-footer">
         <el-button @click="addCateDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="addCate">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 修改分类的对话框 -->
+    <el-dialog title="修改分类" :visible.sync="editDialogVisible" width="50%">
+      <!-- 修改参数的信息 -->
+      <el-form ref="editFormRef" :rules="editFormRules" :model="editForm" label-width="100px">
+        <el-form-item label="分类名称" prop="cat_name">
+          <el-input v-model="editForm.cat_name"></el-input>
+        </el-form-item>
+        <el-form-item class="block" label="父级分类：" prop="cat_name">
+          <!-- options 用来指定数据源 -->
+          <!-- props 用来指定配置对象 -->
+          <el-cascader v-model="selectedKeys" :options="parentCateList" :props="cascaderProps" @change="parentCateChanged" clearable></el-cascader>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -143,7 +162,15 @@ export default {
         checkStrictly: true
       },
       // 选中的父级分类ID数据
-      selectedKeys: []
+      selectedKeys: [],
+      // 修改分类对话框的显示与隐藏
+      editDialogVisible: false,
+      // 编辑分类弹窗获取的信息
+      editForm: {},
+      // 修改表单的验证规则对象
+      editFormRules: {
+        cat_name: [{ required: true, message: '请输入分类名称', trigger: 'blur' }]
+      }
     }
   },
   created() {
@@ -229,6 +256,28 @@ export default {
         this.getCateList()
         this.addCateDialogVisible = false
       })
+    },
+    // 根据ID删除对应的信息
+    async removeCateById(id) {
+      const confirmResult = await this.$confirm('此操作将永久删除该分类, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch((err) => err)
+      // 确认删除，返回字符串 confirm ，点击取消，返回cancel
+      // console.log(confirmResult)
+      if (confirmResult !== 'confirm') {
+        return this.$message.info('已取消删除')
+      } else {
+        // 发起删除的网络请求
+        const { data: res } = await this.$http.delete('categories/' + id)
+        if (res.meta.status !== 200) {
+          return this.$message.error('删除分类失败！')
+        }
+        this.$message.success('删除分类成功！')
+        // 重新获取数据
+        this.getCateList()
+      }
     }
   }
 }
