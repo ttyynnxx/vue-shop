@@ -66,7 +66,7 @@
             <el-input v-model="addForm.username"></el-input>
           </el-form-item>
           <el-form-item label="密码" prop="password">
-            <el-input v-model="addForm.password"></el-input>
+            <el-input type="password" v-model="addForm.password"></el-input>
           </el-form-item>
           <el-form-item label="邮箱" prop="email">
             <el-input v-model="addForm.email"></el-input>
@@ -150,7 +150,7 @@ export default {
       queryInfo: {
         query: '',
         pagenum: 1, // 当前页数
-        pagesize: 2 // 当前每页显示多少条
+        pagesize: 5 // 当前每页显示多少条
       },
       userlist: [],
       total: 0,
@@ -191,7 +191,8 @@ export default {
           { validator: checkMobile, trigger: 'blur' }
         ]
       },
-      editDialogVisible: false, // 修改用户对话框的显示与隐藏
+      // 修改用户对话框的显示与隐藏
+      editDialogVisible: false,
       // 编辑用户弹窗获取的信息
       editForm: {},
       // 修改表单的验证规则对象
@@ -353,9 +354,14 @@ export default {
       const { data: res } = await this.$http.put(`users/${this.userInfo.id}/role`, {
         rid: this.selectedRoleId
       })
+      if (res.meta.status === 400) {
+        return this.$message.error('不允许修改admin账户')
+      }
+
       if (res.meta.status !== 200) {
         return this.$message.error('更新角色失败！')
       }
+      console.log(res.data.username)
 
       this.$message.success('更新用户成功！')
       this.getUserList()
